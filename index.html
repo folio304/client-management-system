@@ -152,6 +152,7 @@
           "Filed Status": c["Filed Status"] || "No",
           "Last Filed On": c["Last Filed On"] || ""
         }));
+        autoResetFiledStatus();
         renderClientCards("GST");
         renderClientCards("ITR");
         renderReminders();
@@ -231,6 +232,32 @@
       });
     }
 
+    // ✅ Automatically reset filed status on 1st of each month
+    async function autoResetFiledStatus() {
+      const today = new Date();
+      if (today.getDate() !== 1) return; // only on 1st
+
+      const resetPromises = allClients
+        .filter(c => c["Filed Status"] === "Yes")
+        .map(c => {
+          return fetch(sheetURL, {
+            method: "POST",
+            body: JSON.stringify({
+              action: "update",
+              name: c.Name,
+              filedStatus: "No",
+              lastFiledOn: ""
+            })
+          });
+        });
+
+      if (resetPromises.length > 0) {
+        await Promise.all(resetPromises);
+        console.log("Auto-reset filed status completed for new month.");
+      }
+    }
+
+    // ✅ Corrected reminder logic
     function renderReminders() {
       const today = new Date();
       const weekEnd = new Date();
@@ -240,22 +267,21 @@
 
       const reminders = [];
       allClients.forEach(c => {
-        if (c["Filed Status"] === "Yes") return;
-
-        if (c.Category === "GST") {
-          [11, 20].forEach(d => {
-            const due = new Date(today.getFullYear(), today.getMonth(), d);
-            if (due >= today && due <= weekEnd)
-              reminders.push({ name: c.Name, type: "GST Return", date: due, mobile: c.Mobile, email: c.Email });
-          });
+        // GST reminders (only 11th)
+        if (c.Category === "GST" && c["Filed Status"] !== "Yes") {
+          const due = new Date(today.getFullYear(), today.getMonth(), 11);
+          if (due >= today && due <= weekEnd)
+            reminders.push({ name: c.Name, type: "GST Return", date: due, mobile: c.Mobile, email: c.Email });
         }
 
-        if (c.Category === "ITR") {
+        // ITR reminders (30th August)
+        if (c.Category === "ITR" && c["Filed Status"] !== "Yes") {
           const due = new Date(today.getFullYear(), 7, 30);
           if (due >= today && due <= weekEnd)
             reminders.push({ name: c.Name, type: "ITR Filing", date: due, mobile: c.Mobile, email: c.Email });
         }
 
+        // Birthday reminders (always shown)
         if (c.DOB) {
           const dob = new Date(c.DOB);
           const bd = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
