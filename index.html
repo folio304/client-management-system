@@ -115,13 +115,13 @@
 <header>Client Management System</header>
 
 <nav>
-  <button id="tabAdd" class="active" onclick="showTab('addClient')">Add Client</button>
+  <button id="tabAdd" onclick="showTab('addClient')">Add Client</button>
   <button id="tabList" onclick="showTab('clientList')">Client List</button>
-  <button id="tabRem" onclick="showTab('reminders')">Reminders</button>
+  <button id="tabRem" class="active" onclick="showTab('reminders')">Reminders</button>
 </nav>
 
 <!-- ADD CLIENT -->
-<section id="addClient" class="active">
+<section id="addClient">
   <h2>Add New Client</h2>
   <form id="clientForm">
     <input type="text" name="name" placeholder="Client Name" required />
@@ -157,7 +157,7 @@
 </section>
 
 <!-- REMINDERS -->
-<section id="reminders">
+<section id="reminders" class="active">
   <h2>This Week's Reminders</h2>
   <button class="btn-refresh" onclick="renderReminders()">🔄 Refresh</button>
   <div id="reminderList">Loading...</div>
@@ -167,14 +167,14 @@
 const sheetURL = "https://script.google.com/macros/s/AKfycbzKuD852vBtPRkyH28D3IjXrvRwSIJNPj2a5262uNSQdHoxkrJp4JsgjWbOQ9TDNxkmPg/exec";
 let allClients = [];
 
-// Show tabs
+// Switch tabs
 function showTab(id){
   document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  if(id==='addClient') tabAdd.classList.add('active');
-  if(id==='clientList'){ tabList.classList.add('active'); fetchData(); }
-  if(id==='reminders'){ tabRem.classList.add('active'); renderReminders(); }
+  document.getElementById('tab'+id.charAt(0).toUpperCase()+id.slice(1)).classList.add('active');
+  if(id==='clientList') fetchData();
+  if(id==='reminders') renderReminders();
 }
 
 // Add client
@@ -184,50 +184,66 @@ document.getElementById("clientForm").addEventListener("submit", async (e)=>{
   const res = await fetch(sheetURL, { method:"POST", body: JSON.stringify(data) });
   document.getElementById("addMsg").innerText = "✅ Client added successfully!";
   e.target.reset();
+  setTimeout(()=>document.getElementById("addMsg").innerText="",2500);
 });
 
-// Fetch all clients
+// Fetch clients
 async function fetchData(){
-  const res = await fetch(sheetURL);
-  const data = await res.json();
-  allClients = data;
-  renderClientCards(data);
+  try{
+    const res = await fetch(sheetURL);
+    const data = await res.json();
+    allClients = data.map(c=>({
+      Name: c.Name || c.name || "",
+      Type: c.Type || c.type || "",
+      Mobile: c.Mobile || c.mobile || "",
+      Email: c.Email || c.email || "",
+      PAN: c.PAN || c.pan || "",
+      GST: c.GST || c.gst || "",
+      DOB: c.DOB || c.dob || "",
+      "Filed Status": c["Filed Status"] || c.filedStatus || "",
+      "Last Filed On": c["Last Filed On"] || c.lastFiledOn || ""
+    }));
+    renderClientCards(allClients);
+  }catch(e){
+    console.error("Fetch failed:", e);
+  }
 }
 
-// Render client cards
+// Render client list
 function renderClientCards(list){
   const container = document.getElementById("clientCards");
   container.innerHTML = "";
+  if(!list.length){ container.innerHTML="<p>No clients found</p>"; return; }
+
   list.forEach(c=>{
-    const card = document.createElement("div");
-    card.className = "client-card";
-    card.innerHTML = `
+    const card=document.createElement("div");
+    card.className="client-card";
+    card.innerHTML=`
       <div class="client-header">
         <h3>${c.Name}</h3>
         <div class="filed-box">
-          <input type="checkbox" ${c["Filed Status"]==="Yes"?"checked":""} 
-            onchange="markFiled('${c.Name}', this.checked, '${c.Type}')">
+          <input type="checkbox" ${c["Filed Status"]==="Yes"?"checked":""}
+            onchange="markFiled('${c.Name}', this.checked)">
           <label>Filed</label>
         </div>
       </div>
       <p><b>Type:</b> ${c.Type}</p>
       <p><b>Mobile:</b> ${c.Mobile}</p>
-      <p><b>Email:</b> ${c.Email || "-"}</p>
-      <p><b>PAN:</b> ${c.PAN || "-"}</p>
-      <p><b>GST:</b> ${c.GST || "-"}</p>
+      <p><b>Email:</b> ${c.Email||"-"}</p>
+      <p><b>PAN:</b> ${c.PAN||"-"}</p>
+      <p><b>GST:</b> ${c.GST||"-"}</p>
     `;
     container.appendChild(card);
   });
 }
 
 function filterClients(){
-  const type = document.getElementById("filterType").value;
-  if(type==="all") renderClientCards(allClients);
-  else renderClientCards(allClients.filter(c=>c.Type===type));
+  const type=document.getElementById("filterType").value;
+  renderClientCards(type==="all"?allClients:allClients.filter(c=>c.Type===type));
 }
 
-// Mark as filed
-async function markFiled(name, status, type){
+// Mark filed
+async function markFiled(name, status){
   await fetch(sheetURL, {
     method:"POST",
     body: JSON.stringify({
@@ -241,53 +257,53 @@ async function markFiled(name, status, type){
 
 // Render reminders
 function renderReminders(){
-  const div = document.getElementById("reminderList");
-  div.innerHTML="";
+  const div=document.getElementById("reminderList");
+  div.innerHTML="Loading...";
+  if(!allClients.length){ fetchData().then(renderReminders); return; }
+
   const today=new Date();
-  const weekStart=new Date(today); weekStart.setDate(today.getDate()-3);
-  const weekEnd=new Date(today); weekEnd.setDate(today.getDate()+7);
+  const start=new Date(today); start.setDate(today.getDate()-2);
+  const end=new Date(today); end.setDate(today.getDate()+7);
   const reminders=[];
 
   allClients.forEach(c=>{
     if(c.Type==="GST"){
       [11,20].forEach(d=>{
-        const due=new Date(today.getFullYear(), today.getMonth(), d);
-        if(due>=weekStart && due<=weekEnd)
-          reminders.push({name:c.Name, type:"GST Return", date:due});
+        const due=new Date(today.getFullYear(),today.getMonth(),d);
+        if(due>=start && due<=end) reminders.push({name:c.Name,type:"GST Return",date:due});
       });
     }
     if(c.Type==="ITR"){
       const due=new Date(today.getFullYear(),7,30);
-      if(due>=weekStart && due<=weekEnd)
-        reminders.push({name:c.Name, type:"ITR Filing", date:due});
+      if(due>=start && due<=end) reminders.push({name:c.Name,type:"ITR Filing",date:due});
     }
     if(c.DOB){
       const dob=new Date(c.DOB);
-      const bd=new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
-      if(bd>=weekStart && bd<=weekEnd)
-        reminders.push({name:c.Name, type:"Birthday", date:bd});
+      const bd=new Date(today.getFullYear(),dob.getMonth(),dob.getDate());
+      if(bd>=start && bd<=end) reminders.push({name:c.Name,type:"Birthday",date:bd});
     }
   });
 
-  if(reminders.length===0){ div.innerHTML="<p>No reminders this week 🎉</p>"; return; }
+  if(!reminders.length){ div.innerHTML="<p>No reminders this week 🎉</p>"; return; }
 
+  div.innerHTML="";
   reminders.forEach(r=>{
     const msg=`Hello ${r.name}, this is a friendly reminder about your ${r.type}.`;
     const wa=`https://wa.me/?text=${encodeURIComponent(msg)}`;
-    const mail=`mailto:?subject=${encodeURIComponent(r.type+" Reminder")}&body=${encodeURIComponent(msg)}`;
+    const mail=`mailto:?subject=${encodeURIComponent(r.type+' Reminder')}&body=${encodeURIComponent(msg)}`;
     const el=document.createElement("div");
     el.className="reminder-card";
     el.innerHTML=`<b>${r.name}</b> — ${r.type} (${r.date.toDateString()})
-      <div>
-        <button class="btn-wa" onclick="window.open('${wa}','_blank')">WhatsApp</button>
-        <button class="btn-email" onclick="window.open('${mail}','_blank')">Email</button>
-      </div>`;
+      <div><button class="btn-wa" onclick="window.open('${wa}','_blank')">WhatsApp</button>
+      <button class="btn-email" onclick="window.open('${mail}','_blank')">Email</button></div>`;
     div.appendChild(el);
   });
 }
 
-// Fetch on page load
-fetchData();
+// Fetch data first, then open reminders tab
+fetchData().then(()=>{
+  showTab("reminders");
+});
 </script>
 </body>
 </html>
