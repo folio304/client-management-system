@@ -6,44 +6,39 @@
   <title>Client Management System</title>
   <style>
     body {
-      font-family: "Segoe UI", sans-serif;
+      font-family: 'Segoe UI', sans-serif;
       background: #f5f5f5;
       margin: 0;
       padding: 0;
       color: #333;
     }
     header {
-      background: #222;
+      background: #1f1f1f;
       color: white;
       text-align: center;
-      padding: 12px;
+      padding: 14px;
       font-size: 20px;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
     }
     nav {
       display: flex;
       justify-content: space-around;
-      background: #444;
+      background: #333;
     }
     nav button {
       flex: 1;
       padding: 12px;
       border: none;
-      background: #444;
+      background: #333;
       color: white;
       font-size: 15px;
       cursor: pointer;
+      transition: background 0.3s;
     }
-    nav button.active {
-      background: #777;
-    }
-    section {
-      display: none;
-      padding: 15px;
-    }
-    section.active {
-      display: block;
-    }
+    nav button.active { background: #777; }
+    section { display: none; padding: 15px; }
+    section.active { display: block; }
+
     input, select {
       width: 100%;
       padding: 10px;
@@ -54,31 +49,22 @@
     button.action {
       width: 100%;
       padding: 10px;
-      background: #1976d2;
       border: none;
       border-radius: 5px;
+      background: #1976d2;
       color: white;
       font-weight: bold;
       cursor: pointer;
     }
-    button.action:hover {
-      background: #0d47a1;
-    }
-    .refresh-btn {
-      background: #444;
-      color: white;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 5px;
-      margin-bottom: 10px;
-      cursor: pointer;
-    }
+    button.action:hover { background: #0d47a1; }
+
     .client-card {
       background: white;
       border-radius: 8px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
       padding: 15px;
       margin-bottom: 12px;
+      text-align: left;
     }
     .client-card h3 { margin: 0 0 6px; }
     .filed-tag {
@@ -96,7 +82,8 @@
 
   <nav>
     <button id="tabAdd" onclick="showTab('addClient')">Add Client</button>
-    <button id="tabList" onclick="showTab('clientList')">Client List</button>
+    <button id="tabGST" onclick="showTab('gstClients')">GST Clients</button>
+    <button id="tabITR" onclick="showTab('itrClients')">ITR Clients</button>
     <button id="tabRem" class="active" onclick="showTab('reminders')">Reminders</button>
   </nav>
 
@@ -119,15 +106,16 @@
     <button class="action" onclick="addClient()">Add Client</button>
   </section>
 
-  <!-- Client List -->
-  <section id="clientList">
-    <h2>Client List</h2>
-    <select id="filterType" onchange="filterClients()">
-      <option value="all">All</option>
-      <option value="GST">GST Clients</option>
-      <option value="ITR">ITR Clients</option>
-    </select>
-    <div id="clientCards"></div>
+  <!-- GST Clients -->
+  <section id="gstClients">
+    <h2>GST Clients</h2>
+    <div id="gstList"></div>
+  </section>
+
+  <!-- ITR Clients -->
+  <section id="itrClients">
+    <h2>ITR Clients</h2>
+    <div id="itrList"></div>
   </section>
 
   <!-- Reminders -->
@@ -145,7 +133,9 @@
       document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
       document.getElementById(id).classList.add("active");
       document.getElementById("tab" + id.charAt(0).toUpperCase() + id.slice(1)).classList.add("active");
-      if (id === "clientList") renderClientCards(allClients);
+
+      if (id === "gstClients") renderClientCards("GST");
+      if (id === "itrClients") renderClientCards("ITR");
       if (id === "reminders") renderReminders();
     }
 
@@ -162,7 +152,8 @@
           "Filed Status": c["Filed Status"] || "No",
           "Last Filed On": c["Last Filed On"] || ""
         }));
-        renderClientCards(allClients);
+        renderClientCards("GST");
+        renderClientCards("ITR");
         renderReminders();
       } catch (err) {
         console.error("Fetch failed:", err);
@@ -197,11 +188,30 @@
       document.querySelectorAll("#addClient input").forEach(i => i.value = "");
     }
 
-    function renderClientCards(list) {
-      const container = document.getElementById("clientCards");
+    async function markFiled(name) {
+      if (!askPassword()) return alert("Wrong password!");
+      await fetch(sheetURL, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "update",
+          name,
+          filedStatus: "Yes",
+          lastFiledOn: new Date().toLocaleDateString()
+        })
+      });
+      fetchData();
+    }
+
+    function renderClientCards(category) {
+      const listId = category === "GST" ? "gstList" : "itrList";
+      const container = document.getElementById(listId);
       container.innerHTML = "";
-      const filter = document.getElementById("filterType").value;
-      const filtered = filter === "all" ? list : list.filter(c => c.Category === filter);
+
+      const filtered = allClients.filter(c => c.Category === category);
+      if (filtered.length === 0) {
+        container.innerHTML = "<p>No clients found.</p>";
+        return;
+      }
 
       filtered.forEach(c => {
         const card = document.createElement("div");
@@ -221,34 +231,17 @@
       });
     }
 
-    async function markFiled(name) {
-      if (!askPassword()) return alert("Wrong password!");
-      await fetch(sheetURL, {
-        method: "POST",
-        body: JSON.stringify({
-          action: "update",
-          name,
-          filedStatus: "Yes",
-          lastFiledOn: new Date().toLocaleDateString()
-        })
-      });
-      fetchData();
-    }
-
     function renderReminders() {
       const today = new Date();
       const weekEnd = new Date();
       weekEnd.setDate(today.getDate() + 7);
-
       const reminderDiv = document.getElementById("reminderList");
       reminderDiv.innerHTML = "";
 
       const reminders = [];
-
       allClients.forEach(c => {
-        if (c["Filed Status"] === "Yes") return; // skip filed ones
+        if (c["Filed Status"] === "Yes") return;
 
-        // GST: 11 & 20
         if (c.Category === "GST") {
           [11, 20].forEach(d => {
             const due = new Date(today.getFullYear(), today.getMonth(), d);
@@ -257,14 +250,12 @@
           });
         }
 
-        // ITR: 30 Aug
         if (c.Category === "ITR") {
           const due = new Date(today.getFullYear(), 7, 30);
           if (due >= today && due <= weekEnd)
             reminders.push({ name: c.Name, type: "ITR Filing", date: due, mobile: c.Mobile, email: c.Email });
         }
 
-        // Birthday
         if (c.DOB) {
           const dob = new Date(c.DOB);
           const bd = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
@@ -295,7 +286,6 @@
       });
     }
 
-    // Load everything on startup
     fetchData().then(() => showTab("reminders"));
   </script>
 </body>
