@@ -40,7 +40,7 @@
   section { display: none; padding: 20px; }
   section.active { display: block; }
 
-  /* Add Client Form */
+  /* Add Client */
   form input, form select {
     width: 100%;
     margin: 6px 0;
@@ -57,25 +57,50 @@
     cursor: pointer;
   }
 
-  /* Client Table */
-  table {
-    width: 100%;
-    border-collapse: collapse;
+  /* Client Cards */
+  .client-card {
+    background: white;
+    border-radius: 10px;
+    padding: 12px 15px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
   }
-  th, td {
-    padding: 8px;
-    border-bottom: 1px solid #ddd;
-    text-align: left;
+  .client-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
-  th { background: #eee; }
+  .client-header h3 {
+    margin: 0;
+    color: #004aad;
+    font-size: 17px;
+  }
+  .filed-box {
+    display: flex;
+    align-items: center;
+  }
+  .filed-box label {
+    margin-left: 5px;
+    font-size: 14px;
+  }
+  .btn-refresh {
+    background: #004aad;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    cursor: pointer;
+    margin-bottom: 10px;
+  }
 
-  @media (max-width:600px){
-    table, thead, tbody, th, td, tr { display:block; }
-    tr { margin-bottom:15px; background:#fff; border-radius:8px; padding:10px; }
-    td { display:flex; justify-content:space-between; padding:6px 0; }
-    td::before { content: attr(data-label); font-weight:bold; color:#555; }
+  /* Reminder */
+  .reminder-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
   }
-
   .btn-wa {
     background:#25D366; color:#fff; border:none; border-radius:4px;
     padding:6px 10px; margin-left:6px; cursor:pointer;
@@ -120,28 +145,21 @@
 <!-- CLIENT LIST -->
 <section id="clientList">
   <h2>Client List</h2>
-  <select id="filterType" onchange="filterClients()">
-    <option value="all">All</option>
-    <option value="GST">GST</option>
-    <option value="ITR">ITR</option>
-  </select>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Mobile</th>
-        <th>Email</th>
-        <th>Filed</th>
-      </tr>
-    </thead>
-    <tbody id="clientTableBody"></tbody>
-  </table>
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <select id="filterType" onchange="filterClients()">
+      <option value="all">All</option>
+      <option value="GST">GST</option>
+      <option value="ITR">ITR</option>
+    </select>
+    <button class="btn-refresh" onclick="fetchData()">🔄 Refresh</button>
+  </div>
+  <div id="clientCards"></div>
 </section>
 
 <!-- REMINDERS -->
 <section id="reminders">
   <h2>This Week's Reminders</h2>
+  <button class="btn-refresh" onclick="renderReminders()">🔄 Refresh</button>
   <div id="reminderList">Loading...</div>
 </section>
 
@@ -149,7 +167,7 @@
 const sheetURL = "https://script.google.com/macros/s/AKfycbzKuD852vBtPRkyH28D3IjXrvRwSIJNPj2a5262uNSQdHoxkrJp4JsgjWbOQ9TDNxkmPg/exec";
 let allClients = [];
 
-// TAB SWITCHER
+// Show tabs
 function showTab(id){
   document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
@@ -159,51 +177,56 @@ function showTab(id){
   if(id==='reminders'){ tabRem.classList.add('active'); renderReminders(); }
 }
 
-// ADD CLIENT FORM
+// Add client
 document.getElementById("clientForm").addEventListener("submit", async (e)=>{
   e.preventDefault();
   const data = Object.fromEntries(new FormData(e.target).entries());
-  const res = await fetch(sheetURL, {
-    method:"POST",
-    body: JSON.stringify(data)
-  });
+  const res = await fetch(sheetURL, { method:"POST", body: JSON.stringify(data) });
   document.getElementById("addMsg").innerText = "✅ Client added successfully!";
   e.target.reset();
 });
 
-// FETCH CLIENT DATA
+// Fetch all clients
 async function fetchData(){
   const res = await fetch(sheetURL);
   const data = await res.json();
   allClients = data;
-  renderClientTable(data);
+  renderClientCards(data);
 }
 
-// RENDER CLIENT TABLE
-function renderClientTable(list){
-  const body = document.getElementById("clientTableBody");
-  body.innerHTML = "";
+// Render client cards
+function renderClientCards(list){
+  const container = document.getElementById("clientCards");
+  container.innerHTML = "";
   list.forEach(c=>{
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td data-label="Name">${c.Name}</td>
-      <td data-label="Type">${c.Type}</td>
-      <td data-label="Mobile">${c.Mobile}</td>
-      <td data-label="Email">${c.Email}</td>
-      <td data-label="Filed">
-        <input type="checkbox" ${c["Filed Status"]==="Yes"?"checked":""} onchange="markFiled('${c.Name}', this.checked, '${c.Type}')">
-      </td>`;
-    body.appendChild(tr);
+    const card = document.createElement("div");
+    card.className = "client-card";
+    card.innerHTML = `
+      <div class="client-header">
+        <h3>${c.Name}</h3>
+        <div class="filed-box">
+          <input type="checkbox" ${c["Filed Status"]==="Yes"?"checked":""} 
+            onchange="markFiled('${c.Name}', this.checked, '${c.Type}')">
+          <label>Filed</label>
+        </div>
+      </div>
+      <p><b>Type:</b> ${c.Type}</p>
+      <p><b>Mobile:</b> ${c.Mobile}</p>
+      <p><b>Email:</b> ${c.Email || "-"}</p>
+      <p><b>PAN:</b> ${c.PAN || "-"}</p>
+      <p><b>GST:</b> ${c.GST || "-"}</p>
+    `;
+    container.appendChild(card);
   });
 }
 
 function filterClients(){
   const type = document.getElementById("filterType").value;
-  if(type==="all") renderClientTable(allClients);
-  else renderClientTable(allClients.filter(c=>c.Type===type));
+  if(type==="all") renderClientCards(allClients);
+  else renderClientCards(allClients.filter(c=>c.Type===type));
 }
 
-// UPDATE FILED STATUS
+// Mark as filed
 async function markFiled(name, status, type){
   await fetch(sheetURL, {
     method:"POST",
@@ -216,7 +239,7 @@ async function markFiled(name, status, type){
   });
 }
 
-// REMINDERS
+// Render reminders
 function renderReminders(){
   const div = document.getElementById("reminderList");
   div.innerHTML="";
@@ -253,13 +276,18 @@ function renderReminders(){
     const wa=`https://wa.me/?text=${encodeURIComponent(msg)}`;
     const mail=`mailto:?subject=${encodeURIComponent(r.type+" Reminder")}&body=${encodeURIComponent(msg)}`;
     const el=document.createElement("div");
+    el.className="reminder-card";
     el.innerHTML=`<b>${r.name}</b> — ${r.type} (${r.date.toDateString()})
-      <button class="btn-wa" onclick="window.open('${wa}','_blank')">WhatsApp</button>
-      <button class="btn-email" onclick="window.open('${mail}','_blank')">Email</button><hr>`;
+      <div>
+        <button class="btn-wa" onclick="window.open('${wa}','_blank')">WhatsApp</button>
+        <button class="btn-email" onclick="window.open('${mail}','_blank')">Email</button>
+      </div>`;
     div.appendChild(el);
   });
 }
 
+// Fetch on page load
+fetchData();
 </script>
 </body>
 </html>
