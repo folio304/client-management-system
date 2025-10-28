@@ -66,6 +66,12 @@
       font-size: 0.9em;
     }
 
+    .add-btn {
+      background: #273c75;
+      color: white;
+      margin-bottom: 15px;
+    }
+
     .done {
       background: #44bd32;
       color: white;
@@ -108,6 +114,29 @@
     .tick.done::after {
       content: "✔";
     }
+
+    form {
+      display: none;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    form input, form select {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .submit-btn {
+      background: #44bd32;
+      color: white;
+      width: 100%;
+    }
   </style>
 </head>
 <body>
@@ -117,6 +146,28 @@
   <main>
     <section>
       <h2>Client List</h2>
+      <button class="add-btn" onclick="toggleForm()">➕ Add New Client</button>
+
+      <form id="addClientForm">
+        <input type="text" id="name" placeholder="Name" required>
+        <input type="tel" id="mobile" placeholder="Mobile" required>
+        <input type="email" id="email" placeholder="Email">
+        <input type="text" id="aadhar" placeholder="Aadhar No">
+        <input type="text" id="pan" placeholder="PAN No">
+        <input type="text" id="gst" placeholder="GST No">
+        <input type="text" id="portalId" placeholder="Portal User ID">
+        <input type="text" id="portalPassword" placeholder="Portal Password">
+        <select id="service">
+          <option value="GST">GST</option>
+          <option value="ITR">ITR</option>
+        </select>
+        <select id="status">
+          <option value="Pending">Pending</option>
+          <option value="Filed">Filed</option>
+        </select>
+        <button type="submit" class="submit-btn">Add Client</button>
+      </form>
+
       <table id="clientTable">
         <thead>
           <tr>
@@ -141,37 +192,66 @@
   <script>
     const sheetURL = "https://script.google.com/macros/s/AKfycbzKuD852vBtPRkyH28D3IjXrvRwSIJNPj2a5262uNSQdHoxkrJp4JsgjWbOQ9TDNxkmPg/exec";
 
-    // Fetch clients and display
-    async function fetchClients() {
-      try {
-        const res = await fetch(sheetURL);
-        const data = await res.json();
-        const tbody = document.querySelector("#clientTable tbody");
-        tbody.innerHTML = "";
-
-        data.forEach(client => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${client.name}</td>
-            <td>${client.mobile}</td>
-            <td>${client.email}</td>
-            <td>${client.service}</td>
-            <td>${client.status}</td>
-            <td><span class="tick" onclick="markDone(this)">✔</span></td>
-          `;
-          tbody.appendChild(row);
-        });
-      } catch (error) {
-        console.error("Error fetching client data:", error);
-      }
+    // Toggle form visibility
+    function toggleForm() {
+      const form = document.getElementById("addClientForm");
+      form.style.display = form.style.display === "none" ? "block" : "none";
     }
 
-    // Tick mark function
+    // Fetch clients
+    async function fetchClients() {
+      const res = await fetch(sheetURL);
+      const data = await res.json();
+      const tbody = document.querySelector("#clientTable tbody");
+      tbody.innerHTML = "";
+      data.forEach(client => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${client.name}</td>
+          <td>${client.mobile}</td>
+          <td>${client.email}</td>
+          <td>${client.service}</td>
+          <td>${client.status}</td>
+          <td><span class="tick" onclick="markDone(this)">✔</span></td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // Add new client
+    document.getElementById("addClientForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const newClient = {
+        name: name.value,
+        mobile: mobile.value,
+        email: email.value,
+        aadhar: aadhar.value,
+        pan: pan.value,
+        gst: gst.value,
+        portalId: portalId.value,
+        portalPassword: portalPassword.value,
+        service: service.value,
+        status: status.value
+      };
+
+      await fetch(sheetURL, {
+        method: "POST",
+        body: JSON.stringify(newClient)
+      });
+
+      alert("✅ Client added successfully!");
+      e.target.reset();
+      toggleForm();
+      fetchClients();
+    });
+
+    // Mark done locally
     function markDone(elem) {
       elem.classList.toggle("done");
     }
 
-    // Example reminders — next version will fetch from sheet
+    // Dummy reminders for now
     const reminders = [
       { name: "Amit Sharma", type: "GST", date: "2025-11-05", mobile: "9876543210", email: "amit@gmail.com" },
       { name: "Riya Patel", type: "ITR", date: "2025-12-15", mobile: "9123456780", email: "riya@gmail.com" },
