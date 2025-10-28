@@ -1,267 +1,265 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Client Management System</title>
 <style>
   body {
-    font-family: 'Poppins', sans-serif;
-    background: #f9f9f9;
-    color: #222;
+    font-family: "Poppins", sans-serif;
+    background: #f6f7fb;
     margin: 0;
-    padding: 20px;
   }
-  h1 { text-align: center; color: #333; }
-  .container {
-    max-width: 900px;
-    margin: auto;
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  header {
+    background: #004aad;
+    color: #fff;
+    text-align: center;
+    padding: 15px;
+    font-size: 22px;
+    font-weight: 600;
   }
-  input, select, button {
-    padding: 8px;
+  nav {
+    display: flex;
+    justify-content: space-around;
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+  }
+  nav button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    background: none;
+    font-weight: 600;
+    cursor: pointer;
+    color: #333;
+  }
+  nav button.active {
+    border-bottom: 3px solid #004aad;
+    color: #004aad;
+  }
+  section { display: none; padding: 20px; }
+  section.active { display: block; }
+
+  /* Add Client Form */
+  form input, form select {
+    width: 100%;
     margin: 6px 0;
+    padding: 8px;
     border-radius: 6px;
     border: 1px solid #ccc;
-    width: 100%;
-    box-sizing: border-box;
   }
-  button {
-    background: #007bff;
+  form button {
+    background: #004aad;
     color: white;
     border: none;
+    border-radius: 6px;
+    padding: 10px 15px;
     cursor: pointer;
   }
-  button:hover { background: #0056b3; }
+
+  /* Client Table */
   table {
     width: 100%;
     border-collapse: collapse;
   }
   th, td {
-    padding: 10px 8px;
+    padding: 8px;
     border-bottom: 1px solid #ddd;
-    font-size: 14px;
-    word-break: break-word;
+    text-align: left;
   }
-  th { background: #f3f3f3; }
-  @media (max-width: 600px) {
-    table, thead, tbody, th, td, tr { display: block; }
-    tr {
-      margin-bottom: 15px;
-      background: #fff;
-      border-radius: 10px;
-      padding: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-    }
-    td {
-      display: flex;
-      justify-content: space-between;
-      border: none;
-      padding: 6px 0;
-    }
-    td::before {
-      content: attr(data-label);
-      font-weight: bold;
-      color: #555;
-    }
+  th { background: #eee; }
+
+  @media (max-width:600px){
+    table, thead, tbody, th, td, tr { display:block; }
+    tr { margin-bottom:15px; background:#fff; border-radius:8px; padding:10px; }
+    td { display:flex; justify-content:space-between; padding:6px 0; }
+    td::before { content: attr(data-label); font-weight:bold; color:#555; }
   }
-  .reminder-section {
-    margin-top: 30px;
-    background: #fff;
-    padding: 15px;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+
+  .btn-wa {
+    background:#25D366; color:#fff; border:none; border-radius:4px;
+    padding:6px 10px; margin-left:6px; cursor:pointer;
+  }
+  .btn-email {
+    background:#007bff; color:#fff; border:none; border-radius:4px;
+    padding:6px 10px; margin-left:4px; cursor:pointer;
   }
 </style>
 </head>
 <body>
-<div class="container">
-  <h1>Client Management System</h1>
+<header>Client Management System</header>
 
-  <!-- Add Client Form -->
-  <h3>Add New Client</h3>
-  <form id="clientForm" onsubmit="return addClient()">
-    <input type="text" id="name" placeholder="Client Name" required>
-    <select id="type" required>
-      <option value="">Select Client Type</option>
-      <option value="GST">GST Client</option>
-      <option value="ITR">ITR Client</option>
+<nav>
+  <button id="tabAdd" class="active" onclick="showTab('addClient')">Add Client</button>
+  <button id="tabList" onclick="showTab('clientList')">Client List</button>
+  <button id="tabRem" onclick="showTab('reminders')">Reminders</button>
+</nav>
+
+<!-- ADD CLIENT -->
+<section id="addClient" class="active">
+  <h2>Add New Client</h2>
+  <form id="clientForm">
+    <input type="text" name="name" placeholder="Client Name" required />
+    <select name="type">
+      <option value="GST">GST</option>
+      <option value="ITR">ITR</option>
     </select>
-    <input type="text" id="mobile" placeholder="Mobile No">
-    <input type="email" id="email" placeholder="Email ID">
-    <input type="text" id="aadhar" placeholder="Aadhar No">
-    <input type="text" id="pan" placeholder="PAN No">
-    <input type="text" id="gst" placeholder="GST No">
-    <input type="text" id="portalId" placeholder="Portal User ID">
-    <input type="text" id="portalPass" placeholder="Portal Password">
-    <input type="date" id="dob" placeholder="Date of Birth">
-    <button type="submit">➕ Add Client</button>
+    <input type="text" name="mobile" placeholder="Mobile No." required />
+    <input type="email" name="email" placeholder="Email ID" />
+    <input type="text" name="aadhar" placeholder="Aadhar No." />
+    <input type="text" name="pan" placeholder="PAN No." />
+    <input type="text" name="gst" placeholder="GST No." />
+    <input type="text" name="portalId" placeholder="Portal User ID" />
+    <input type="text" name="portalPass" placeholder="Portal Password" />
+    <input type="date" name="dob" placeholder="Date of Birth" />
+    <button type="submit">Add Client</button>
   </form>
-  <hr>
+  <p id="addMsg"></p>
+</section>
 
-  <!-- Filter -->
-  <div style="display:flex;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px;">
-    <select id="filterType" onchange="filterClients()">
-      <option value="all">All Clients</option>
-      <option value="GST">GST Clients</option>
-      <option value="ITR">ITR Clients</option>
-    </select>
-    <button onclick="fetchData()">🔄 Refresh</button>
-  </div>
-
-  <!-- Table -->
-  <table id="clientTable">
+<!-- CLIENT LIST -->
+<section id="clientList">
+  <h2>Client List</h2>
+  <select id="filterType" onchange="filterClients()">
+    <option value="all">All</option>
+    <option value="GST">GST</option>
+    <option value="ITR">ITR</option>
+  </select>
+  <table>
     <thead>
       <tr>
         <th>Name</th>
         <th>Type</th>
         <th>Mobile</th>
         <th>Email</th>
-        <th>Filed?</th>
-        <th>Last Filed On</th>
+        <th>Filed</th>
       </tr>
     </thead>
-    <tbody></tbody>
+    <tbody id="clientTableBody"></tbody>
   </table>
+</section>
 
-  <!-- Reminders -->
-  <div class="reminder-section">
-    <h2>📅 Reminders (This Week)</h2>
-    <div id="reminderList">Loading...</div>
-  </div>
-</div>
+<!-- REMINDERS -->
+<section id="reminders">
+  <h2>This Week's Reminders</h2>
+  <div id="reminderList">Loading...</div>
+</section>
 
 <script>
 const sheetURL = "https://script.google.com/macros/s/AKfycbzKuD852vBtPRkyH28D3IjXrvRwSIJNPj2a5262uNSQdHoxkrJp4JsgjWbOQ9TDNxkmPg/exec";
 let allClients = [];
 
+// TAB SWITCHER
+function showTab(id){
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='addClient') tabAdd.classList.add('active');
+  if(id==='clientList'){ tabList.classList.add('active'); fetchData(); }
+  if(id==='reminders'){ tabRem.classList.add('active'); renderReminders(); }
+}
+
+// ADD CLIENT FORM
+document.getElementById("clientForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target).entries());
+  const res = await fetch(sheetURL, {
+    method:"POST",
+    body: JSON.stringify(data)
+  });
+  document.getElementById("addMsg").innerText = "✅ Client added successfully!";
+  e.target.reset();
+});
+
+// FETCH CLIENT DATA
 async function fetchData(){
   const res = await fetch(sheetURL);
   const data = await res.json();
   allClients = data;
-  renderTable(data);
-  renderReminders(data);
+  renderClientTable(data);
 }
 
-function renderTable(clients){
-  const tbody = document.querySelector('#clientTable tbody');
-  tbody.innerHTML = '';
-  clients.forEach(c => {
-    const tr = document.createElement('tr');
+// RENDER CLIENT TABLE
+function renderClientTable(list){
+  const body = document.getElementById("clientTableBody");
+  body.innerHTML = "";
+  list.forEach(c=>{
+    const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td data-label="Name">${c.name}</td>
-      <td data-label="Type">${c.type}</td>
-      <td data-label="Mobile">${c.mobile}</td>
-      <td data-label="Email">${c.email}</td>
-      <td data-label="Filed?">
-        <input type="checkbox" ${c['Filed Status'] === 'Yes' ? 'checked' : ''} onchange="markFiled('${c.name}','${c.type}',this.checked)">
-      </td>
-      <td data-label="Last Filed">${c['Last Filed On'] || ''}</td>
-    `;
-    tbody.appendChild(tr);
+      <td data-label="Name">${c.Name}</td>
+      <td data-label="Type">${c.Type}</td>
+      <td data-label="Mobile">${c.Mobile}</td>
+      <td data-label="Email">${c.Email}</td>
+      <td data-label="Filed">
+        <input type="checkbox" ${c["Filed Status"]==="Yes"?"checked":""} onchange="markFiled('${c.Name}', this.checked, '${c.Type}')">
+      </td>`;
+    body.appendChild(tr);
   });
 }
 
 function filterClients(){
-  const type = document.getElementById('filterType').value;
-  if(type === "all") renderTable(allClients);
-  else renderTable(allClients.filter(c => c.type.toLowerCase() === type.toLowerCase()));
+  const type = document.getElementById("filterType").value;
+  if(type==="all") renderClientTable(allClients);
+  else renderClientTable(allClients.filter(c=>c.Type===type));
 }
 
-// Mark as Filed
-async function markFiled(name, type, checked){
-  const filedStatus = checked ? "Yes" : "No";
-  const today = new Date();
-  const lastFiledOn = today.toDateString();
+// UPDATE FILED STATUS
+async function markFiled(name, status, type){
   await fetch(sheetURL, {
-    method: 'POST',
+    method:"POST",
     body: JSON.stringify({
-      action: "update",
-      name,
-      filedStatus,
-      lastFiledOn
-    }),
-    headers: { 'Content-Type': 'application/json' }
+      action:"update",
+      name:name,
+      filedStatus: status?"Yes":"No",
+      lastFiledOn: new Date().toLocaleDateString()
+    })
   });
-  alert(`${name}'s ${type} marked as filed ✅`);
-  fetchData();
 }
 
-// Add new client
-async function addClient(){
-  const form = document.getElementById("clientForm");
-  const client = {
-    name: form.name.value,
-    type: form.type.value,
-    mobile: form.mobile.value,
-    email: form.email.value,
-    aadhar: form.aadhar.value,
-    pan: form.pan.value,
-    gst: form.gst.value,
-    portalId: form.portalId.value,
-    portalPass: form.portalPass.value,
-    dob: form.dob.value
-  };
-  await fetch(sheetURL, {
-    method: 'POST',
-    body: JSON.stringify(client),
-    headers: { 'Content-Type': 'application/json' }
-  });
-  alert("✅ Client added successfully!");
-  form.reset();
-  fetchData();
-  return false;
-}
+// REMINDERS
+function renderReminders(){
+  const div = document.getElementById("reminderList");
+  div.innerHTML="";
+  const today=new Date();
+  const weekStart=new Date(today); weekStart.setDate(today.getDate()-3);
+  const weekEnd=new Date(today); weekEnd.setDate(today.getDate()+7);
+  const reminders=[];
 
-// Reminders (unchanged)
-function renderReminders(rem){
-  const rdiv = document.getElementById('reminderList');
-  rdiv.innerHTML = '';
-  const today = new Date();
-  const weekStart = new Date(today);
-  weekStart.setDate(today.getDate() - 3);
-  const weekEnd = new Date(today);
-  weekEnd.setDate(today.getDate() + 7);
-  const reminders = [];
-  rem.forEach(c => {
-    if(c.type === "GST"){
-      const d11 = new Date(today.getFullYear(), today.getMonth(), 11);
-      const d20 = new Date(today.getFullYear(), today.getMonth(), 20);
-      [d11, d20].forEach(d => {
-        if(d >= weekStart && d <= weekEnd){
-          reminders.push({name:c.name, date:d.toDateString(), type:"GST Return Due"});
-        }
+  allClients.forEach(c=>{
+    if(c.Type==="GST"){
+      [11,20].forEach(d=>{
+        const due=new Date(today.getFullYear(), today.getMonth(), d);
+        if(due>=weekStart && due<=weekEnd)
+          reminders.push({name:c.Name, type:"GST Return", date:due});
       });
     }
-    if(c.type === "ITR"){
-      const d30 = new Date(today.getFullYear(), 7, 30);
-      if(d30 >= weekStart && d30 <= weekEnd){
-        reminders.push({name:c.name, date:d30.toDateString(), type:"ITR Filing Due"});
-      }
+    if(c.Type==="ITR"){
+      const due=new Date(today.getFullYear(),7,30);
+      if(due>=weekStart && due<=weekEnd)
+        reminders.push({name:c.Name, type:"ITR Filing", date:due});
     }
-    if(c.dob){
-      const dob = new Date(c.dob);
-      const bd = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
-      if(bd >= weekStart && bd <= weekEnd){
-        reminders.push({name:c.name, date:bd.toDateString(), type:"🎂 Birthday"});
-      }
+    if(c.DOB){
+      const dob=new Date(c.DOB);
+      const bd=new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
+      if(bd>=weekStart && bd<=weekEnd)
+        reminders.push({name:c.Name, type:"Birthday", date:bd});
     }
   });
-  if(reminders.length === 0){
-    rdiv.innerHTML = '<p>No reminders this week 🎉</p>';
-    return;
-  }
-  reminders.forEach(r => {
-    const div = document.createElement('div');
-    div.innerHTML = `<b>${r.name}</b> — ${r.type} (${r.date})<hr>`;
-    rdiv.appendChild(div);
+
+  if(reminders.length===0){ div.innerHTML="<p>No reminders this week 🎉</p>"; return; }
+
+  reminders.forEach(r=>{
+    const msg=`Hello ${r.name}, this is a friendly reminder about your ${r.type}.`;
+    const wa=`https://wa.me/?text=${encodeURIComponent(msg)}`;
+    const mail=`mailto:?subject=${encodeURIComponent(r.type+" Reminder")}&body=${encodeURIComponent(msg)}`;
+    const el=document.createElement("div");
+    el.innerHTML=`<b>${r.name}</b> — ${r.type} (${r.date.toDateString()})
+      <button class="btn-wa" onclick="window.open('${wa}','_blank')">WhatsApp</button>
+      <button class="btn-email" onclick="window.open('${mail}','_blank')">Email</button><hr>`;
+    div.appendChild(el);
   });
 }
 
-fetchData();
 </script>
 </body>
 </html>
