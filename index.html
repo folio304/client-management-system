@@ -39,13 +39,6 @@
     section { display: none; padding: 15px; }
     section.active { display: block; }
 
-    input, select {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
     button.action {
       width: 100%;
       padding: 10px;
@@ -87,35 +80,15 @@
   <header>Client Management System</header>
 
   <nav>
-    <button id="tabAdd" onclick="showTab('addClient')">Add Client</button>
-    <button id="tabGST" onclick="showTab('gstClients')">GST Clients</button>
+    <button id="tabGST" class="active" onclick="showTab('gstClients')">GST Clients</button>
     <button id="tabITR" onclick="showTab('itrClients')">ITR Clients</button>
-    <button id="tabRem" class="active" onclick="showTab('reminders')">Reminders</button>
+    <button id="tabRem" onclick="showTab('reminders')">Reminders</button>
   </nav>
 
   <div id="loading">⏳ Loading client data...</div>
 
-  <!-- Add Client -->
-  <section id="addClient">
-    <h2>Add New Client</h2>
-    <input id="name" placeholder="Client Name" />
-    <select id="category">
-      <option value="GST">GST Client</option>
-      <option value="ITR">ITR Client</option>
-    </select>
-    <input id="mobile" placeholder="Mobile No." />
-    <input id="email" placeholder="Email" />
-    <input id="aadhar" placeholder="Aadhar No." />
-    <input id="pan" placeholder="PAN No." />
-    <input id="gst" placeholder="GST No." />
-    <input id="portalId" placeholder="Portal User ID" />
-    <input id="portalPass" placeholder="Portal Password" />
-    <input id="dob" type="date" placeholder="Date of Birth" />
-    <button class="action" onclick="addClient()">Add Client</button>
-  </section>
-
   <!-- GST Clients -->
-  <section id="gstClients">
+  <section id="gstClients" class="active">
     <h2>GST Clients</h2>
     <div id="gstList"></div>
   </section>
@@ -127,13 +100,13 @@
   </section>
 
   <!-- Reminders -->
-  <section id="reminders" class="active">
+  <section id="reminders">
     <h2>Reminders (This Week)</h2>
     <div id="reminderList"></div>
   </section>
 
   <script>
-    const sheetURL = "https://script.google.com/macros/s/AKfycbwQ_Mn9Md8x_LW-oK2T6aWEQ_mjGLAEvLb1Es-G0L1DZZPI2WIOqfhhLeTYfUK17BJD8A/exec";
+    const sheetURL = "YOUR_SCRIPT_URL_HERE"; // replace with your /exec link
     let allClients = [];
 
     function showTab(id) {
@@ -154,7 +127,7 @@
         document.getElementById("loading").style.display = "none";
         allClients = data.map(c => ({
           Name: c.Name || "",
-          Category: c.Type || c.Category || "",
+          Category: c.Category || c.Type || "",
           Mobile: c.Mobile || "",
           Email: c.Email || "",
           DOB: c.DOB || "",
@@ -180,47 +153,11 @@
       return pwd === "9876";
     }
 
-async function addClient() {
-  if (!askPassword()) return alert("Wrong password!");
-
-  const formData = {
-    name: name.value.trim(),
-    type: category.value,
-    mobile: mobile.value.trim(),
-    email: email.value.trim(),
-    aadhar: aadhar.value.trim(),
-    pan: pan.value.trim(),
-    gst: gst.value.trim(),
-    portalId: portalId.value.trim(),
-    portalPass: portalPass.value.trim(),
-    dob: dob.value
-  };
-
-  // Validation
-  if (!formData.name || !formData.mobile)
-    return alert("Please fill at least Name and Mobile.");
-
-  try {
-    const res = await fetch(sheetURL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData)
-    });
-    const text = await res.text();
-    console.log("Server response:", text);
-    alert("✅ Client added successfully!");
-    fetchData();
-    document.querySelectorAll("#addClient input").forEach(i => i.value = "");
-  } catch (err) {
-    console.error("Error:", err);
-    alert("❌ Failed to add client. Please try again.");
-  }
-}
-
     async function markFiled(name) {
       if (!askPassword()) return alert("Wrong password!");
       await fetch(sheetURL, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "update",
           name,
@@ -266,12 +203,12 @@ async function addClient() {
     async function autoResetFiledStatus() {
       const today = new Date();
       if (today.getDate() !== 1) return;
-
       const resetPromises = allClients
         .filter(c => c["Filed Status"] === "Yes")
         .map(c => {
           return fetch(sheetURL, {
             method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               action: "update",
               name: c.Name,
@@ -280,11 +217,7 @@ async function addClient() {
             })
           });
         });
-
-      if (resetPromises.length > 0) {
-        await Promise.all(resetPromises);
-        console.log("Auto-reset filed status completed for new month.");
-      }
+      if (resetPromises.length > 0) await Promise.all(resetPromises);
     }
 
     function renderReminders() {
@@ -301,13 +234,11 @@ async function addClient() {
           if (due >= today && due <= weekEnd)
             reminders.push({ name: c.Name, type: "GST Return", date: due, mobile: c.Mobile, email: c.Email });
         }
-
         if (c.Category === "ITR" && c["Filed Status"] !== "Yes") {
           const due = new Date(today.getFullYear(), 7, 30);
           if (due >= today && due <= weekEnd)
             reminders.push({ name: c.Name, type: "ITR Filing", date: due, mobile: c.Mobile, email: c.Email });
         }
-
         if (c.DOB) {
           const dob = new Date(c.DOB);
           const bd = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
@@ -338,7 +269,7 @@ async function addClient() {
       });
     }
 
-    fetchData().then(() => showTab("reminders"));
+    fetchData().then(() => showTab("gstClients"));
   </script>
 </body>
 </html>
