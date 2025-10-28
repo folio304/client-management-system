@@ -180,28 +180,42 @@
       return pwd === "9876";
     }
 
-    async function addClient() {
-      if (!askPassword()) return alert("Wrong password!");
-      const formData = {
-        name: name.value.trim(),
-        type: category.value,
-        mobile: mobile.value.trim(),
-        email: email.value.trim(),
-        aadhar: aadhar.value.trim(),
-        pan: pan.value.trim(),
-        gst: gst.value.trim(),
-        portalId: portalId.value.trim(),
-        portalPass: portalPass.value.trim(),
-        dob: dob.value
-      };
-      await fetch(sheetURL, {
-        method: "POST",
-        body: JSON.stringify(formData)
-      });
-      alert("✅ Client added successfully!");
-      fetchData();
-      document.querySelectorAll("#addClient input").forEach(i => i.value = "");
-    }
+async function addClient() {
+  if (!askPassword()) return alert("Wrong password!");
+
+  const formData = {
+    name: name.value.trim(),
+    type: category.value,
+    mobile: mobile.value.trim(),
+    email: email.value.trim(),
+    aadhar: aadhar.value.trim(),
+    pan: pan.value.trim(),
+    gst: gst.value.trim(),
+    portalId: portalId.value.trim(),
+    portalPass: portalPass.value.trim(),
+    dob: dob.value
+  };
+
+  // Validation
+  if (!formData.name || !formData.mobile)
+    return alert("Please fill at least Name and Mobile.");
+
+  try {
+    const res = await fetch(sheetURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData)
+    });
+    const text = await res.text();
+    console.log("Server response:", text);
+    alert("✅ Client added successfully!");
+    fetchData();
+    document.querySelectorAll("#addClient input").forEach(i => i.value = "");
+  } catch (err) {
+    console.error("Error:", err);
+    alert("❌ Failed to add client. Please try again.");
+  }
+}
 
     async function markFiled(name) {
       if (!askPassword()) return alert("Wrong password!");
