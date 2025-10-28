@@ -1,294 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Client Management System</title>
-  <style>
-    body {
-      font-family: "Segoe UI", sans-serif;
-      background: #f8f9fb;
-      color: #333;
-      margin: 0;
-      padding: 0;
-    }
-
-    header {
-      background: #2f3640;
-      color: white;
-      text-align: center;
-      padding: 15px 0;
-      font-size: 1.4em;
-      letter-spacing: 1px;
-    }
-
-    main {
-      padding: 20px;
-      max-width: 1000px;
-      margin: auto;
-    }
-
-    h2 {
-      color: #2f3640;
-      border-left: 5px solid #2f3640;
-      padding-left: 10px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      border-radius: 6px;
-      overflow: hidden;
-    }
-
-    th, td {
-      padding: 10px;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-    }
-
-    th {
-      background: #2f3640;
-      color: white;
-    }
-
-    tr:hover {
-      background: #f1f2f6;
-    }
-
-    button {
-      padding: 6px 10px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.9em;
-    }
-
-    .add-btn {
-      background: #273c75;
-      color: white;
-      margin-bottom: 15px;
-    }
-
-    .done {
-      background: #44bd32;
-      color: white;
-    }
-
-    .whatsapp {
-      background: #25D366;
-      color: white;
-    }
-
-    .email {
-      background: #487eb0;
-      color: white;
-    }
-
-    .reminder-card {
-      background: white;
-      border-left: 5px solid #718093;
-      padding: 15px;
-      margin-bottom: 10px;
-      border-radius: 6px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-    }
-
-    .reminder-buttons {
-      margin-top: 8px;
-    }
-
-    .reminder-buttons button {
-      margin-right: 8px;
-    }
-
-    .tick {
-      cursor: pointer;
-      color: #44bd32;
-      font-weight: bold;
-      font-size: 1.2em;
-    }
-
-    .tick.done::after {
-      content: "✔";
-    }
-
-    form {
-      display: none;
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
-    }
-
-    form input, form select {
-      width: 100%;
-      padding: 8px;
-      margin: 5px 0 10px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-
-    .submit-btn {
-      background: #44bd32;
-      color: white;
-      width: 100%;
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Client Management System</title>
+<style>
+  body{font-family:Inter,Segoe UI,Arial,sans-serif;background:#f6f8fb;margin:0;padding:0}
+  header{background:#263445;color:#fff;padding:14px;text-align:center;font-size:18px}
+  main{max-width:1000px;margin:20px auto;padding:0 16px}
+  h2{color:#263445;margin:10px 0}
+  .panel{background:#fff;padding:14px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.06);margin-bottom:18px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+  input,select{width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box}
+  button{padding:8px 12px;border-radius:6px;border:none;cursor:pointer}
+  .btn-primary{background:#2f80ed;color:#fff}
+  .btn-success{background:#27ae60;color:#fff}
+  .btn-wa{background:#25D366;color:#fff}
+  table{width:100%;border-collapse:collapse;margin-top:10px}
+  th,td{padding:10px;border-bottom:1px solid #eee;text-align:left;font-size:14px}
+  th{background:#1b2b3a;color:#fff;position:sticky;top:0}
+  .tick{cursor:pointer;font-weight:700;color:#2ecc71}
+  .small{font-size:13px;color:#555}
+</style>
 </head>
 <body>
+<header>📁 Client Management System</header>
+<main>
+  <div class="panel">
+    <h2>Clients</h2>
+    <button class="btn-primary" onclick="toggleForm()">➕ Add New Client</button>
 
-  <header>📁 Client Management System</header>
+    <form id="addClientForm" style="display:none;margin-top:12px" onsubmit="return addClient(event)">
+      <div class="grid">
+        <input id="name" placeholder="Name" required>
+        <input id="mobile" placeholder="Mobile (digits only)" required>
+        <input id="email" type="email" placeholder="Email">
+        <input id="dob" type="date" placeholder="DOB">
+        <input id="aadhar" placeholder="Aadhaar (optional)">
+        <input id="pan" placeholder="PAN">
+        <input id="gst" placeholder="GST">
+        <input id="portalId" placeholder="Portal ID">
+        <input id="portalPassword" placeholder="Portal Password">
+        <select id="service"><option>GST</option><option>ITR</option></select>
+        <select id="status"><option>Pending</option><option>Filed</option></select>
+      </div>
+      <div style="margin-top:10px"><button class="btn-success" type="submit">Add Client</button></div>
+    </form>
 
-  <main>
-    <section>
-      <h2>Client List</h2>
-      <button class="add-btn" onclick="toggleForm()">➕ Add New Client</button>
+    <table id="clientTable">
+      <thead><tr><th>#</th><th>Name</th><th>Mobile</th><th>Email</th><th>Service</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
-      <form id="addClientForm">
-        <input type="text" id="name" placeholder="Name" required>
-        <input type="tel" id="mobile" placeholder="Mobile" required>
-        <input type="email" id="email" placeholder="Email">
-        <input type="text" id="aadhar" placeholder="Aadhar No">
-        <input type="text" id="pan" placeholder="PAN No">
-        <input type="text" id="gst" placeholder="GST No">
-        <input type="text" id="portalId" placeholder="Portal User ID">
-        <input type="text" id="portalPassword" placeholder="Portal Password">
-        <select id="service">
-          <option value="GST">GST</option>
-          <option value="ITR">ITR</option>
-        </select>
-        <select id="status">
-          <option value="Pending">Pending</option>
-          <option value="Filed">Filed</option>
-        </select>
-        <button type="submit" class="submit-btn">Add Client</button>
-      </form>
+  <div class="panel">
+    <h2>Reminders</h2>
+    <div id="reminderList" class="small"></div>
+  </div>
+</main>
 
-      <table id="clientTable">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Mobile</th>
-            <th>Email</th>
-            <th>Service</th>
-            <th>Status</th>
-            <th>✔</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
+<script>
+  // 👉 Replace with your Apps Script Web App URL
+  const sheetURL = "https://script.google.com/macros/s/AKfycbzKuD852vBtPRkyH28D3IjXrvRwSIJNPj2a5262uNSQdHoxkrJp4JsgjWbOQ9TDNxkmPg/exec";
 
-    <section style="margin-top: 40px;">
-      <h2>Reminders</h2>
-      <div id="reminderList"></div>
-    </section>
-  </main>
+  function toggleForm(){
+    const f=document.getElementById('addClientForm');
+    f.style.display=(f.style.display==='none'||f.style.display==='')?'block':'none';
+  }
 
-  <script>
-    const sheetURL = "https://script.google.com/macros/s/AKfycbzKuD852vBtPRkyH28D3IjXrvRwSIJNPj2a5262uNSQdHoxkrJp4JsgjWbOQ9TDNxkmPg/exec";
-
-    // Toggle form visibility
-    function toggleForm() {
-      const form = document.getElementById("addClientForm");
-      form.style.display = form.style.display === "none" ? "block" : "none";
+  async function fetchData(){
+    try{
+      const res=await fetch(sheetURL);
+      const data=await res.json();
+      renderClients(data.clients||[]);
+      renderReminders(data.reminders||[]);
+    }catch(err){
+      console.error(err);
     }
+  }
 
-    // Fetch clients
-    async function fetchClients() {
-      const res = await fetch(sheetURL);
-      const data = await res.json();
-      const tbody = document.querySelector("#clientTable tbody");
-      tbody.innerHTML = "";
-      data.forEach(client => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${client.name}</td>
-          <td>${client.mobile}</td>
-          <td>${client.email}</td>
-          <td>${client.service}</td>
-          <td>${client.status}</td>
-          <td><span class="tick" onclick="markDone(this)">✔</span></td>
-        `;
-        tbody.appendChild(row);
-      });
-    }
-
-    // Add new client
-    document.getElementById("addClientForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const newClient = {
-        name: name.value,
-        mobile: mobile.value,
-        email: email.value,
-        aadhar: aadhar.value,
-        pan: pan.value,
-        gst: gst.value,
-        portalId: portalId.value,
-        portalPassword: portalPassword.value,
-        service: service.value,
-        status: status.value
-      };
-
-      await fetch(sheetURL, {
-        method: "POST",
-        body: JSON.stringify(newClient)
-      });
-
-      alert("✅ Client added successfully!");
-      e.target.reset();
-      toggleForm();
-      fetchClients();
+  function renderClients(clients){
+    const tb=document.querySelector('#clientTable tbody');
+    tb.innerHTML='';
+    clients.forEach((c,i)=>{
+      const row=document.createElement('tr');
+      const sheetRow=c._sheetRow||c._sheetrow;
+      row.innerHTML=`<td>${i+1}</td>
+        <td>${c.name||''}</td>
+        <td>${c.mobile||''}</td>
+        <td>${c.email||''}</td>
+        <td>${c.service||''}</td>
+        <td>${c.status||''}</td>
+        <td><span class="tick" onclick="toggleStatus(${sheetRow},this)">${(c.status||'').toLowerCase().includes('filed')?'✔ Filed':'Mark Filed'}</span></td>`;
+      tb.appendChild(row);
     });
+  }
 
-    // Mark done locally
-    function markDone(elem) {
-      elem.classList.toggle("done");
-    }
+  async function addClient(e){
+    e.preventDefault();
+    const payload={
+      name:document.getElementById('name').value,
+      mobile:document.getElementById('mobile').value,
+      email:document.getElementById('email').value,
+      dob:document.getElementById('dob').value,
+      aadhar:document.getElementById('aadhar').value,
+      pan:document.getElementById('pan').value,
+      gst:document.getElementById('gst').value,
+      portalId:document.getElementById('portalId').value,
+      portalPassword:document.getElementById('portalPassword').value,
+      service:document.getElementById('service').value,
+      status:document.getElementById('status').value
+    };
+    await fetch(sheetURL,{method:'POST',body:JSON.stringify(payload)});
+    alert('Client Added');
+    e.target.reset();
+    toggleForm();
+    fetchData();
+  }
 
-    // Dummy reminders for now
-    const reminders = [
-      { name: "Amit Sharma", type: "GST", date: "2025-11-05", mobile: "9876543210", email: "amit@gmail.com" },
-      { name: "Riya Patel", type: "ITR", date: "2025-12-15", mobile: "9123456780", email: "riya@gmail.com" },
-      { name: "Rahul Jain", type: "Birthday", date: "2025-10-30", mobile: "7894561230", email: "rahul@gmail.com" }
-    ];
+  async function toggleStatus(row,el){
+    const newStatus=el.innerText.toLowerCase().includes('filed')?'Pending':'Filed';
+    await fetch(sheetURL,{method:'PUT',body:JSON.stringify({row,status:newStatus})});
+    fetchData();
+  }
 
-    function renderReminders() {
-      const container = document.getElementById("reminderList");
-      container.innerHTML = "";
-      reminders.forEach(r => {
-        const div = document.createElement("div");
-        div.className = "reminder-card";
-        div.innerHTML = `
-          <strong>${r.name}</strong> — ${r.type} (${r.date})
-          <div class="reminder-buttons">
-            <button class="whatsapp" onclick="sendWhatsApp('${r.mobile}', '${r.name}', '${r.type}')">WhatsApp</button>
-            <button class="email" onclick="sendEmail('${r.email}', '${r.name}', '${r.type}')">Email</button>
-          </div>
-        `;
-        container.appendChild(div);
-      });
-    }
+  function renderReminders(rem){
+    const rdiv=document.getElementById('reminderList');
+    rdiv.innerHTML='';
+    rem.forEach(r=>{
+      const d=document.createElement('div');
+      d.innerHTML=`<b>${r.name}</b> — ${r.type} (${r.date}) 
+      <br><button class="btn-wa" onclick="wa('${r.mobile}','${r.name}','${r.message}')">WhatsApp</button>
+      <button class="btn-primary" onclick="email('${r.email}','${r.name}','${r.message}')">Email</button><hr>`;
+      rdiv.appendChild(d);
+    });
+  }
 
-    function sendWhatsApp(mobile, name, type) {
-      const msg = encodeURIComponent(`Hello ${name}, this is a reminder regarding your ${type}. Please complete it before the due date.`);
-      window.open(`https://wa.me/91${mobile}?text=${msg}`, "_blank");
-    }
+  function wa(num,name,msg){
+    if(!num)return alert('No mobile');
+    const m=num.length===10?'91'+num:num;
+    window.open(`https://wa.me/${m}?text=${encodeURIComponent('Hello '+name+', '+msg)}`,'_blank');
+  }
 
-    function sendEmail(email, name, type) {
-      const subject = encodeURIComponent(`${type} Reminder`);
-      const body = encodeURIComponent(`Dear ${name},\n\nThis is a reminder regarding your ${type}. Please complete it before the due date.\n\nThank you.`);
-      window.open(`mailto:${email}?subject=${subject}&body=${body}`);
-    }
+  function email(to,name,msg){
+    if(!to)return alert('No email');
+    window.open(`mailto:${to}?subject=Reminder&body=${encodeURIComponent('Dear '+name+', '+msg)}`,'_blank');
+  }
 
-    fetchClients();
-    renderReminders();
-  </script>
-
+  fetchData();
+</script>
 </body>
 </html>
