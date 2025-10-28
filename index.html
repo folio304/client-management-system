@@ -21,6 +21,10 @@
   th{background:#1b2b3a;color:#fff;position:sticky;top:0}
   .tick{cursor:pointer;font-weight:700;color:#2ecc71}
   .small{font-size:13px;color:#555}
+  .reminder-box{padding:8px;border-radius:6px;margin-bottom:8px}
+  .reminder-today{background:#ffe5e5;border-left:4px solid #ff4d4d}
+  .reminder-soon{background:#fff9e6;border-left:4px solid #ffd633}
+  .reminder-later{background:#e6ffe6;border-left:4px solid #27ae60}
 </style>
 </head>
 <body>
@@ -28,7 +32,17 @@
 <main>
   <div class="panel">
     <h2>Clients</h2>
-    <button class="btn-primary" onclick="toggleForm()">➕ Add New Client</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <button class="btn-primary" onclick="toggleForm()">➕ Add New Client</button>
+      <div>
+        <label for="filterSelect" style="font-size:14px;margin-right:4px;">Filter:</label>
+        <select id="filterSelect" onchange="applyFilter()">
+          <option value="all">All Clients</option>
+          <option value="GST">GST Clients</option>
+          <option value="ITR">ITR Clients</option>
+        </select>
+      </div>
+    </div>
 
     <form id="addClientForm" style="display:none;margin-top:12px" onsubmit="return addClient(event)">
       <div class="grid">
@@ -54,14 +68,15 @@
   </div>
 
   <div class="panel">
-    <h2>Reminders</h2>
+    <h2>Reminders (This Week)</h2>
     <div id="reminderList" class="small"></div>
   </div>
 </main>
 
 <script>
-  // 👉 Replace with your Apps Script Web App URL
+  // 👉 Replace with your actual Apps Script Web App URL
   const sheetURL = "https://script.google.com/macros/s/AKfycbzKuD852vBtPRkyH28D3IjXrvRwSIJNPj2a5262uNSQdHoxkrJp4JsgjWbOQ9TDNxkmPg/exec";
+  let allClients = [];
 
   function toggleForm(){
     const f=document.getElementById('addClientForm');
@@ -72,7 +87,8 @@
     try{
       const res=await fetch(sheetURL);
       const data=await res.json();
-      renderClients(data.clients||[]);
+      allClients = data.clients || [];
+      renderClients(allClients);
       renderReminders(data.reminders||[]);
     }catch(err){
       console.error(err);
@@ -94,6 +110,16 @@
         <td><span class="tick" onclick="toggleStatus(${sheetRow},this)">${(c.status||'').toLowerCase().includes('filed')?'✔ Filed':'Mark Filed'}</span></td>`;
       tb.appendChild(row);
     });
+  }
+
+  // 🔍 Filter by GST / ITR / All
+  function applyFilter(){
+    const val = document.getElementById('filterSelect').value;
+    if(val === 'all') renderClients(allClients);
+    else {
+      const filtered = allClients.filter(c => (c.service||'').toUpperCase() === val.toUpperCase());
+      renderClients(filtered);
+    }
   }
 
   async function addClient(e){
@@ -124,14 +150,40 @@
     fetchData();
   }
 
+  // ✅ Show reminders only for this week
   function renderReminders(rem){
     const rdiv=document.getElementById('reminderList');
     rdiv.innerHTML='';
-    rem.forEach(r=>{
+    const today=new Date();
+    const weekStart=new Date(today);
+    weekStart.setDate(today.getDate()-3);
+    const weekEnd=new Date(today);
+    weekEnd.setDate(today.getDate()+7);
+
+    const upcoming=rem.filter(r=>{
+      const rd=new Date(r.date);
+      return rd>=weekStart && rd<=weekEnd;
+    });
+
+    if(upcoming.length===0){
+      rdiv.innerHTML='<p>No reminders this week 🎉</p>';
+      return;
+    }
+
+    upcoming.forEach(r=>{
+      const rd=new Date(r.date);
+      const diffDays=(rd - today)/(1000*60*60*24);
+      let cssClass='reminder-later';
+      if(Math.abs(diffDays)<1) cssClass='reminder-today';
+      else if(diffDays<3) cssClass='reminder-soon';
+
       const d=document.createElement('div');
-      d.innerHTML=`<b>${r.name}</b> — ${r.type} (${r.date}) 
-      <br><button class="btn-wa" onclick="wa('${r.mobile}','${r.name}','${r.message}')">WhatsApp</button>
-      <button class="btn-primary" onclick="email('${r.email}','${r.name}','${r.message}')">Email</button><hr>`;
+      d.className=`reminder-box ${cssClass}`;
+      d.innerHTML=`
+        <b>${r.name}</b> — ${r.type} (${r.date}) 
+        <br><button class="btn-wa" onclick="wa('${r.mobile}','${r.name}','${r.message}')">WhatsApp</button>
+        <button class="btn-primary" onclick="email('${r.email}','${r.name}','${r.message}')">Email</button>
+      `;
       rdiv.appendChild(d);
     });
   }
