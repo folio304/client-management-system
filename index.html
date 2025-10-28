@@ -1,309 +1,302 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Client Management System</title>
-<style>
-  body {
-    font-family: "Poppins", sans-serif;
-    background: #f6f7fb;
-    margin: 0;
-  }
-  header {
-    background: #004aad;
-    color: #fff;
-    text-align: center;
-    padding: 15px;
-    font-size: 22px;
-    font-weight: 600;
-  }
-  nav {
-    display: flex;
-    justify-content: space-around;
-    background: #fff;
-    border-bottom: 1px solid #ddd;
-  }
-  nav button {
-    flex: 1;
-    padding: 12px;
-    border: none;
-    background: none;
-    font-weight: 600;
-    cursor: pointer;
-    color: #333;
-  }
-  nav button.active {
-    border-bottom: 3px solid #004aad;
-    color: #004aad;
-  }
-  section { display: none; padding: 20px; }
-  section.active { display: block; }
-
-  /* Add Client */
-  form input, form select {
-    width: 100%;
-    margin: 6px 0;
-    padding: 8px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-  }
-  form button {
-    background: #004aad;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 10px 15px;
-    cursor: pointer;
-  }
-
-  /* Client Cards */
-  .client-card {
-    background: white;
-    border-radius: 10px;
-    padding: 12px 15px;
-    margin-bottom: 12px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-  }
-  .client-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .client-header h3 {
-    margin: 0;
-    color: #004aad;
-    font-size: 17px;
-  }
-  .filed-box {
-    display: flex;
-    align-items: center;
-  }
-  .filed-box label {
-    margin-left: 5px;
-    font-size: 14px;
-  }
-  .btn-refresh {
-    background: #004aad;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 8px 14px;
-    cursor: pointer;
-    margin-bottom: 10px;
-  }
-
-  /* Reminder */
-  .reminder-card {
-    background: #fff;
-    border-radius: 10px;
-    padding: 10px 15px;
-    margin-bottom: 10px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-  }
-  .btn-wa {
-    background:#25D366; color:#fff; border:none; border-radius:4px;
-    padding:6px 10px; margin-left:6px; cursor:pointer;
-  }
-  .btn-email {
-    background:#007bff; color:#fff; border:none; border-radius:4px;
-    padding:6px 10px; margin-left:4px; cursor:pointer;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Client Management System</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+    header {
+      background: #222;
+      color: white;
+      text-align: center;
+      padding: 12px;
+      font-size: 20px;
+      letter-spacing: 1px;
+    }
+    nav {
+      display: flex;
+      justify-content: space-around;
+      background: #444;
+    }
+    nav button {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      background: #444;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    nav button.active {
+      background: #777;
+    }
+    section {
+      display: none;
+      padding: 15px;
+    }
+    section.active {
+      display: block;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button.action {
+      width: 100%;
+      padding: 10px;
+      background: #1976d2;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button.action:hover {
+      background: #0d47a1;
+    }
+    .refresh-btn {
+      background: #444;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+    .client-card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      padding: 15px;
+      margin-bottom: 12px;
+    }
+    .client-card h3 { margin: 0 0 6px; }
+    .filed-tag {
+      display: inline-block;
+      background: #2e7d32;
+      color: white;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+  </style>
 </head>
 <body>
-<header>Client Management System</header>
+  <header>Client Management System</header>
 
-<nav>
-  <button id="tabAdd" onclick="showTab('addClient')">Add Client</button>
-  <button id="tabList" onclick="showTab('clientList')">Client List</button>
-  <button id="tabRem" class="active" onclick="showTab('reminders')">Reminders</button>
-</nav>
+  <nav>
+    <button id="tabAdd" onclick="showTab('addClient')">Add Client</button>
+    <button id="tabList" onclick="showTab('clientList')">Client List</button>
+    <button id="tabRem" class="active" onclick="showTab('reminders')">Reminders</button>
+  </nav>
 
-<!-- ADD CLIENT -->
-<section id="addClient">
-  <h2>Add New Client</h2>
-  <form id="clientForm">
-    <input type="text" name="name" placeholder="Client Name" required />
-    <select name="type">
-      <option value="GST">GST</option>
-      <option value="ITR">ITR</option>
+  <!-- Add Client -->
+  <section id="addClient">
+    <h2>Add New Client</h2>
+    <input id="name" placeholder="Client Name" />
+    <select id="category">
+      <option value="GST">GST Client</option>
+      <option value="ITR">ITR Client</option>
     </select>
-    <input type="text" name="mobile" placeholder="Mobile No." required />
-    <input type="email" name="email" placeholder="Email ID" />
-    <input type="text" name="aadhar" placeholder="Aadhar No." />
-    <input type="text" name="pan" placeholder="PAN No." />
-    <input type="text" name="gst" placeholder="GST No." />
-    <input type="text" name="portalId" placeholder="Portal User ID" />
-    <input type="text" name="portalPass" placeholder="Portal Password" />
-    <input type="date" name="dob" placeholder="Date of Birth" />
-    <button type="submit">Add Client</button>
-  </form>
-  <p id="addMsg"></p>
-</section>
+    <input id="mobile" placeholder="Mobile No." />
+    <input id="email" placeholder="Email" />
+    <input id="aadhar" placeholder="Aadhar No." />
+    <input id="pan" placeholder="PAN No." />
+    <input id="gst" placeholder="GST No." />
+    <input id="portalId" placeholder="Portal User ID" />
+    <input id="portalPass" placeholder="Portal Password" />
+    <input id="dob" type="date" placeholder="Date of Birth" />
+    <button class="action" onclick="addClient()">Add Client</button>
+  </section>
 
-<!-- CLIENT LIST -->
-<section id="clientList">
-  <h2>Client List</h2>
-  <div style="display:flex; justify-content:space-between; align-items:center;">
+  <!-- Client List -->
+  <section id="clientList">
+    <h2>Client List</h2>
     <select id="filterType" onchange="filterClients()">
       <option value="all">All</option>
-      <option value="GST">GST</option>
-      <option value="ITR">ITR</option>
+      <option value="GST">GST Clients</option>
+      <option value="ITR">ITR Clients</option>
     </select>
-    <button class="btn-refresh" onclick="fetchData()">🔄 Refresh</button>
-  </div>
-  <div id="clientCards"></div>
-</section>
+    <div id="clientCards"></div>
+  </section>
 
-<!-- REMINDERS -->
-<section id="reminders" class="active">
-  <h2>This Week's Reminders</h2>
-  <button class="btn-refresh" onclick="renderReminders()">🔄 Refresh</button>
-  <div id="reminderList">Loading...</div>
-</section>
+  <!-- Reminders -->
+  <section id="reminders" class="active">
+    <h2>Reminders (This Week)</h2>
+    <div id="reminderList"></div>
+  </section>
 
-<script>
-const sheetURL = "https://script.google.com/macros/s/AKfycbzKuD852vBtPRkyH28D3IjXrvRwSIJNPj2a5262uNSQdHoxkrJp4JsgjWbOQ9TDNxkmPg/exec";
-let allClients = [];
+  <script>
+    const sheetURL = "https://script.google.com/macros/s/AKfycbzKuD852vBtPRkyH28D3IjXrvRwSIJNPj2a5262uNSQdHoxkrJp4JsgjWbOQ9TDNxkmPg/exec";
+    let allClients = [];
 
-// Switch tabs
-function showTab(id){
-  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  document.getElementById('tab'+id.charAt(0).toUpperCase()+id.slice(1)).classList.add('active');
-  if(id==='clientList') fetchData();
-  if(id==='reminders') renderReminders();
-}
+    function showTab(id) {
+      document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
+      document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+      document.getElementById("tab" + id.charAt(0).toUpperCase() + id.slice(1)).classList.add("active");
+      if (id === "clientList") renderClientCards(allClients);
+      if (id === "reminders") renderReminders();
+    }
 
-// Add client
-document.getElementById("clientForm").addEventListener("submit", async (e)=>{
-  e.preventDefault();
-  const data = Object.fromEntries(new FormData(e.target).entries());
-  const res = await fetch(sheetURL, { method:"POST", body: JSON.stringify(data) });
-  document.getElementById("addMsg").innerText = "✅ Client added successfully!";
-  e.target.reset();
-  setTimeout(()=>document.getElementById("addMsg").innerText="",2500);
-});
+    async function fetchData() {
+      try {
+        const res = await fetch(sheetURL);
+        const data = await res.json();
+        allClients = data.map(c => ({
+          Name: c.Name || "",
+          Category: c.Type || c.Category || "",
+          Mobile: c.Mobile || "",
+          Email: c.Email || "",
+          DOB: c.DOB || "",
+          "Filed Status": c["Filed Status"] || "No",
+          "Last Filed On": c["Last Filed On"] || ""
+        }));
+        renderClientCards(allClients);
+        renderReminders();
+      } catch (err) {
+        console.error("Fetch failed:", err);
+      }
+    }
 
-// Fetch clients
-async function fetchData(){
-  try{
-    const res = await fetch(sheetURL);
-    const data = await res.json();
-    allClients = data.map(c=>({
-      Name: c.Name || c.name || "",
-      Type: c.Type || c.type || "",
-      Mobile: c.Mobile || c.mobile || "",
-      Email: c.Email || c.email || "",
-      PAN: c.PAN || c.pan || "",
-      GST: c.GST || c.gst || "",
-      DOB: c.DOB || c.dob || "",
-      "Filed Status": c["Filed Status"] || c.filedStatus || "",
-      "Last Filed On": c["Last Filed On"] || c.lastFiledOn || ""
-    }));
-    renderClientCards(allClients);
-  }catch(e){
-    console.error("Fetch failed:", e);
-  }
-}
+    function askPassword() {
+      const pwd = prompt("Enter password:");
+      return pwd === "9876";
+    }
 
-// Render client list
-function renderClientCards(list){
-  const container = document.getElementById("clientCards");
-  container.innerHTML = "";
-  if(!list.length){ container.innerHTML="<p>No clients found</p>"; return; }
+    async function addClient() {
+      if (!askPassword()) return alert("Wrong password!");
+      const formData = {
+        name: name.value.trim(),
+        type: category.value,
+        mobile: mobile.value.trim(),
+        email: email.value.trim(),
+        aadhar: aadhar.value.trim(),
+        pan: pan.value.trim(),
+        gst: gst.value.trim(),
+        portalId: portalId.value.trim(),
+        portalPass: portalPass.value.trim(),
+        dob: dob.value
+      };
+      await fetch(sheetURL, {
+        method: "POST",
+        body: JSON.stringify(formData)
+      });
+      alert("✅ Client added successfully!");
+      fetchData();
+      document.querySelectorAll("#addClient input").forEach(i => i.value = "");
+    }
 
-  list.forEach(c=>{
-    const card=document.createElement("div");
-    card.className="client-card";
-    card.innerHTML=`
-      <div class="client-header">
-        <h3>${c.Name}</h3>
-        <div class="filed-box">
-          <input type="checkbox" ${c["Filed Status"]==="Yes"?"checked":""}
-            onchange="markFiled('${c.Name}', this.checked)">
-          <label>Filed</label>
-        </div>
-      </div>
-      <p><b>Type:</b> ${c.Type}</p>
-      <p><b>Mobile:</b> ${c.Mobile}</p>
-      <p><b>Email:</b> ${c.Email||"-"}</p>
-      <p><b>PAN:</b> ${c.PAN||"-"}</p>
-      <p><b>GST:</b> ${c.GST||"-"}</p>
-    `;
-    container.appendChild(card);
-  });
-}
+    function renderClientCards(list) {
+      const container = document.getElementById("clientCards");
+      container.innerHTML = "";
+      const filter = document.getElementById("filterType").value;
+      const filtered = filter === "all" ? list : list.filter(c => c.Category === filter);
 
-function filterClients(){
-  const type=document.getElementById("filterType").value;
-  renderClientCards(type==="all"?allClients:allClients.filter(c=>c.Type===type));
-}
-
-// Mark filed
-async function markFiled(name, status){
-  await fetch(sheetURL, {
-    method:"POST",
-    body: JSON.stringify({
-      action:"update",
-      name:name,
-      filedStatus: status?"Yes":"No",
-      lastFiledOn: new Date().toLocaleDateString()
-    })
-  });
-}
-
-// Render reminders
-function renderReminders(){
-  const div=document.getElementById("reminderList");
-  div.innerHTML="Loading...";
-  if(!allClients.length){ fetchData().then(renderReminders); return; }
-
-  const today=new Date();
-  const start=new Date(today); start.setDate(today.getDate()-2);
-  const end=new Date(today); end.setDate(today.getDate()+7);
-  const reminders=[];
-
-  allClients.forEach(c=>{
-    if(c.Type==="GST"){
-      [11,20].forEach(d=>{
-        const due=new Date(today.getFullYear(),today.getMonth(),d);
-        if(due>=start && due<=end) reminders.push({name:c.Name,type:"GST Return",date:due});
+      filtered.forEach(c => {
+        const card = document.createElement("div");
+        card.className = "client-card";
+        card.innerHTML = `
+          <h3>${c.Name}</h3>
+          <p><b>Category:</b> ${c.Category}</p>
+          <p><b>Mobile:</b> ${c.Mobile}</p>
+          <p><b>Email:</b> ${c.Email}</p>
+          ${
+            c["Filed Status"] === "Yes"
+              ? `<span class="filed-tag">Filed ✅</span>`
+              : `<button class="action" style="background:#2e7d32" onclick="markFiled('${c.Name}')">Mark as Filed</button>`
+          }
+        `;
+        container.appendChild(card);
       });
     }
-    if(c.Type==="ITR"){
-      const due=new Date(today.getFullYear(),7,30);
-      if(due>=start && due<=end) reminders.push({name:c.Name,type:"ITR Filing",date:due});
+
+    async function markFiled(name) {
+      if (!askPassword()) return alert("Wrong password!");
+      await fetch(sheetURL, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "update",
+          name,
+          filedStatus: "Yes",
+          lastFiledOn: new Date().toLocaleDateString()
+        })
+      });
+      fetchData();
     }
-    if(c.DOB){
-      const dob=new Date(c.DOB);
-      const bd=new Date(today.getFullYear(),dob.getMonth(),dob.getDate());
-      if(bd>=start && bd<=end) reminders.push({name:c.Name,type:"Birthday",date:bd});
+
+    function renderReminders() {
+      const today = new Date();
+      const weekEnd = new Date();
+      weekEnd.setDate(today.getDate() + 7);
+
+      const reminderDiv = document.getElementById("reminderList");
+      reminderDiv.innerHTML = "";
+
+      const reminders = [];
+
+      allClients.forEach(c => {
+        if (c["Filed Status"] === "Yes") return; // skip filed ones
+
+        // GST: 11 & 20
+        if (c.Category === "GST") {
+          [11, 20].forEach(d => {
+            const due = new Date(today.getFullYear(), today.getMonth(), d);
+            if (due >= today && due <= weekEnd)
+              reminders.push({ name: c.Name, type: "GST Return", date: due, mobile: c.Mobile, email: c.Email });
+          });
+        }
+
+        // ITR: 30 Aug
+        if (c.Category === "ITR") {
+          const due = new Date(today.getFullYear(), 7, 30);
+          if (due >= today && due <= weekEnd)
+            reminders.push({ name: c.Name, type: "ITR Filing", date: due, mobile: c.Mobile, email: c.Email });
+        }
+
+        // Birthday
+        if (c.DOB) {
+          const dob = new Date(c.DOB);
+          const bd = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
+          if (bd >= today && bd <= weekEnd)
+            reminders.push({ name: c.Name, type: "Birthday", date: bd, mobile: c.Mobile, email: c.Email });
+        }
+      });
+
+      if (reminders.length === 0) {
+        reminderDiv.innerHTML = "<p>No reminders this week 🎉</p>";
+        return;
+      }
+
+      reminders.forEach(r => {
+        const msg = encodeURIComponent(`Hello ${r.name}, this is a reminder for your ${r.type}.`);
+        const wa = `https://wa.me/91${r.mobile}?text=${msg}`;
+        const mail = `mailto:${r.email}?subject=${encodeURIComponent(r.type)}&body=${msg}`;
+        const div = document.createElement("div");
+        div.className = "client-card";
+        div.innerHTML = `
+          <b>${r.name}</b> — ${r.type} (${r.date.toDateString()})
+          <div>
+            <button class="action" onclick="window.open('${wa}')">📱 WhatsApp</button>
+            <button class="action" style="background:#c62828" onclick="window.open('${mail}')">📧 Email</button>
+          </div>
+        `;
+        reminderDiv.appendChild(div);
+      });
     }
-  });
 
-  if(!reminders.length){ div.innerHTML="<p>No reminders this week 🎉</p>"; return; }
-
-  div.innerHTML="";
-  reminders.forEach(r=>{
-    const msg=`Hello ${r.name}, this is a friendly reminder about your ${r.type}.`;
-    const wa=`https://wa.me/?text=${encodeURIComponent(msg)}`;
-    const mail=`mailto:?subject=${encodeURIComponent(r.type+' Reminder')}&body=${encodeURIComponent(msg)}`;
-    const el=document.createElement("div");
-    el.className="reminder-card";
-    el.innerHTML=`<b>${r.name}</b> — ${r.type} (${r.date.toDateString()})
-      <div><button class="btn-wa" onclick="window.open('${wa}','_blank')">WhatsApp</button>
-      <button class="btn-email" onclick="window.open('${mail}','_blank')">Email</button></div>`;
-    div.appendChild(el);
-  });
-}
-
-// Fetch data first, then open reminders tab
-fetchData().then(()=>{
-  showTab("reminders");
-});
-</script>
+    // Load everything on startup
+    fetchData().then(() => showTab("reminders"));
+  </script>
 </body>
 </html>
