@@ -153,21 +153,28 @@
       return pwd === "9876";
     }
 
-    async function markFiled(name) {
-      if (!askPassword()) return alert("Wrong password!");
-      await fetch(sheetURL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "update",
-          name,
-          filedStatus: "Yes",
-          lastFiledOn: new Date().toLocaleDateString()
-        })
-      });
-      fetchData();
-    }
-
+async function markFiled(name) {
+  if (!askPassword()) return alert("Wrong password!");
+  try {
+    const res = await fetch(sheetURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "update",
+        name,
+        filedStatus: "Yes",
+        lastFiledOn: new Date().toLocaleDateString()
+      })
+    });
+    const text = await res.text();
+    console.log("Server:", text);
+    alert("✅ Filed status updated!");
+    fetchData();
+  } catch (err) {
+    console.error("Error:", err);
+    alert("❌ Failed to update filed status");
+  }
+}
     function renderClientCards(category) {
       const listId = category === "GST" ? "gstList" : "itrList";
       const container = document.getElementById(listId);
