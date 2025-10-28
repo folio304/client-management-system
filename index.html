@@ -122,17 +122,32 @@
       document.querySelectorAll('.tab button').forEach(b => b.classList.remove('active'));
       document.getElementById('tab' + (tab.charAt(0).toUpperCase() + tab.slice(1))).classList.add('active');
 
-      // When switching tabs, render from cached data instantly
       if (tab === 'clientList') renderClients();
       if (tab === 'reminders') renderReminders();
     }
 
     async function fetchData() {
-      const res = await fetch(SCRIPT_URL + "?action=get");
-      clients = await res.json();
-      resetFiledMonthly();
-      renderClients();
-      renderReminders();
+      try {
+        const res = await fetch(SCRIPT_URL + "?action=get");
+        clients = await res.json();
+
+        // ✅ Initialize missing fields (to prevent undefined)
+        clients.forEach(c => {
+          if (!c.filed) c.filed = false;
+          if (c.filedMonth === undefined) c.filedMonth = null;
+          if (!c.category) c.category = "";
+          if (!c.name) c.name = "";
+          if (!c.email) c.email = "";
+          if (!c.mobile) c.mobile = "";
+          if (!c.dob) c.dob = "";
+        });
+
+        resetFiledMonthly();
+        renderClients();
+        renderReminders();
+      } catch (err) {
+        console.error("Error fetching data:", err);
+      }
     }
 
     function refreshData() {
@@ -182,10 +197,10 @@
           div.className = "client-card";
           div.innerHTML = `
             <b>${c.name}</b><br>
-            Category: ${c.category}<br>
-            Mobile: ${c.mobile}<br>
-            Email: ${c.email}<br>
-            DOB: ${c.dob}<br>
+            Category: ${c.category || 'N/A'}<br>
+            Mobile: ${c.mobile || 'N/A'}<br>
+            Email: ${c.email || 'N/A'}<br>
+            DOB: ${c.dob || 'N/A'}<br>
             ${filedStatus}
           `;
           list.appendChild(div);
@@ -201,6 +216,8 @@
       weekEnd.setDate(today.getDate() + 7);
 
       const weeklyReminders = clients.filter(c => {
+        if (!c.dob || !c.category) return false;
+
         const dob = new Date(c.dob);
         const dobThisYear = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
         const isBirthday = dobThisYear >= today && dobThisYear <= weekEnd;
@@ -251,7 +268,6 @@
       });
     }
 
-    // Fetch once at startup for instant rendering
     fetchData().then(() => showTab("reminders"));
   </script>
 </body>
