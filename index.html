@@ -75,6 +75,12 @@
       border-radius: 4px;
       font-size: 13px;
     }
+    #loading {
+      text-align: center;
+      padding: 30px;
+      font-size: 18px;
+      color: #555;
+    }
   </style>
 </head>
 <body>
@@ -86,6 +92,8 @@
     <button id="tabITR" onclick="showTab('itrClients')">ITR Clients</button>
     <button id="tabRem" class="active" onclick="showTab('reminders')">Reminders</button>
   </nav>
+
+  <div id="loading">⏳ Loading client data...</div>
 
   <!-- Add Client -->
   <section id="addClient">
@@ -143,12 +151,17 @@
       try {
         const res = await fetch(sheetURL);
         const data = await res.json();
+        document.getElementById("loading").style.display = "none";
         allClients = data.map(c => ({
           Name: c.Name || "",
           Category: c.Type || c.Category || "",
           Mobile: c.Mobile || "",
           Email: c.Email || "",
           DOB: c.DOB || "",
+          PAN: c.PAN || "",
+          GST: c.GST || "",
+          PortalID: c["Portal ID"] || c.PortalId || "",
+          PortalPass: c["Portal Pass"] || c.PortalPass || "",
           "Filed Status": c["Filed Status"] || "No",
           "Last Filed On": c["Last Filed On"] || ""
         }));
@@ -158,6 +171,7 @@
         renderReminders();
       } catch (err) {
         console.error("Fetch failed:", err);
+        document.getElementById("loading").innerText = "❌ Failed to load data.";
       }
     }
 
@@ -219,9 +233,12 @@
         card.className = "client-card";
         card.innerHTML = `
           <h3>${c.Name}</h3>
-          <p><b>Category:</b> ${c.Category}</p>
           <p><b>Mobile:</b> ${c.Mobile}</p>
-          <p><b>Email:</b> ${c.Email}</p>
+          <p><b>DOB:</b> ${c.DOB || "—"}</p>
+          ${category === "ITR" ? `<p><b>PAN:</b> ${c.PAN || "—"}</p>` : ""}
+          ${category === "GST" ? `<p><b>GST No:</b> ${c.GST || "—"}</p>` : ""}
+          <p><b>Portal User ID:</b> ${c.PortalID || "—"}</p>
+          <p><b>Portal Password:</b> ${c.PortalPass || "—"}</p>
           ${
             c["Filed Status"] === "Yes"
               ? `<span class="filed-tag">Filed ✅</span>`
@@ -232,10 +249,9 @@
       });
     }
 
-    // ✅ Automatically reset filed status on 1st of each month
     async function autoResetFiledStatus() {
       const today = new Date();
-      if (today.getDate() !== 1) return; // only on 1st
+      if (today.getDate() !== 1) return;
 
       const resetPromises = allClients
         .filter(c => c["Filed Status"] === "Yes")
@@ -257,7 +273,6 @@
       }
     }
 
-    // ✅ Corrected reminder logic
     function renderReminders() {
       const today = new Date();
       const weekEnd = new Date();
@@ -267,21 +282,18 @@
 
       const reminders = [];
       allClients.forEach(c => {
-        // GST reminders (only 11th)
         if (c.Category === "GST" && c["Filed Status"] !== "Yes") {
           const due = new Date(today.getFullYear(), today.getMonth(), 11);
           if (due >= today && due <= weekEnd)
             reminders.push({ name: c.Name, type: "GST Return", date: due, mobile: c.Mobile, email: c.Email });
         }
 
-        // ITR reminders (30th August)
         if (c.Category === "ITR" && c["Filed Status"] !== "Yes") {
           const due = new Date(today.getFullYear(), 7, 30);
           if (due >= today && due <= weekEnd)
             reminders.push({ name: c.Name, type: "ITR Filing", date: due, mobile: c.Mobile, email: c.Email });
         }
 
-        // Birthday reminders (always shown)
         if (c.DOB) {
           const dob = new Date(c.DOB);
           const bd = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
