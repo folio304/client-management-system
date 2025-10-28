@@ -12,57 +12,43 @@
     margin: 0;
     padding: 20px;
   }
-
-  h1 {
-    text-align: center;
-    color: #333;
-  }
-
+  h1 { text-align: center; color: #333; }
   .container {
     max-width: 900px;
-    margin: 0 auto;
+    margin: auto;
     background: white;
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
   }
-
-  .controls {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    margin-bottom: 10px;
-  }
-
-  select, button {
-    margin: 5px 0;
-    padding: 8px 12px;
+  input, select, button {
+    padding: 8px;
+    margin: 6px 0;
     border-radius: 6px;
     border: 1px solid #ccc;
-    font-size: 15px;
+    width: 100%;
+    box-sizing: border-box;
   }
-
+  button {
+    background: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  button:hover { background: #0056b3; }
   table {
     width: 100%;
     border-collapse: collapse;
   }
-
   th, td {
     padding: 10px 8px;
     border-bottom: 1px solid #ddd;
-    text-align: left;
     font-size: 14px;
     word-break: break-word;
   }
-
-  th {
-    background: #f3f3f3;
-  }
-
+  th { background: #f3f3f3; }
   @media (max-width: 600px) {
-    table, thead, tbody, th, td, tr {
-      display: block;
-    }
+    table, thead, tbody, th, td, tr { display: block; }
     tr {
       margin-bottom: 15px;
       background: #fff;
@@ -82,25 +68,6 @@
       color: #555;
     }
   }
-
-  .btn-wa {
-    background: #25D366;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 6px 10px;
-    cursor: pointer;
-  }
-
-  .btn-primary {
-    background: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 6px 10px;
-    cursor: pointer;
-  }
-
   .reminder-section {
     margin-top: 30px;
     background: #fff;
@@ -108,15 +75,35 @@
     border-radius: 10px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   }
-
 </style>
 </head>
 <body>
-
 <div class="container">
   <h1>Client Management System</h1>
 
-  <div class="controls">
+  <!-- Add Client Form -->
+  <h3>Add New Client</h3>
+  <form id="clientForm" onsubmit="return addClient()">
+    <input type="text" id="name" placeholder="Client Name" required>
+    <select id="type" required>
+      <option value="">Select Client Type</option>
+      <option value="GST">GST Client</option>
+      <option value="ITR">ITR Client</option>
+    </select>
+    <input type="text" id="mobile" placeholder="Mobile No">
+    <input type="email" id="email" placeholder="Email ID">
+    <input type="text" id="aadhar" placeholder="Aadhar No">
+    <input type="text" id="pan" placeholder="PAN No">
+    <input type="text" id="gst" placeholder="GST No">
+    <input type="text" id="portalId" placeholder="Portal User ID">
+    <input type="text" id="portalPass" placeholder="Portal Password">
+    <input type="date" id="dob" placeholder="Date of Birth">
+    <button type="submit">➕ Add Client</button>
+  </form>
+  <hr>
+
+  <!-- Filter -->
+  <div style="display:flex;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px;">
     <select id="filterType" onchange="filterClients()">
       <option value="all">All Clients</option>
       <option value="GST">GST Clients</option>
@@ -125,23 +112,22 @@
     <button onclick="fetchData()">🔄 Refresh</button>
   </div>
 
+  <!-- Table -->
   <table id="clientTable">
     <thead>
       <tr>
         <th>Name</th>
-        <th>Client Type</th>
+        <th>Type</th>
         <th>Mobile</th>
         <th>Email</th>
-        <th>Aadhar</th>
-        <th>PAN</th>
-        <th>GST No</th>
-        <th>Portal ID</th>
-        <th>Password</th>
+        <th>Filed?</th>
+        <th>Last Filed On</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
 
+  <!-- Reminders -->
   <div class="reminder-section">
     <h2>📅 Reminders (This Week)</h2>
     <div id="reminderList">Loading...</div>
@@ -170,11 +156,10 @@ function renderTable(clients){
       <td data-label="Type">${c.type}</td>
       <td data-label="Mobile">${c.mobile}</td>
       <td data-label="Email">${c.email}</td>
-      <td data-label="Aadhar">${c.aadhar}</td>
-      <td data-label="PAN">${c.pan}</td>
-      <td data-label="GST">${c.gst}</td>
-      <td data-label="User ID">${c.portalId}</td>
-      <td data-label="Password">${c.portalPass}</td>
+      <td data-label="Filed?">
+        <input type="checkbox" ${c['Filed Status'] === 'Yes' ? 'checked' : ''} onchange="markFiled('${c.name}','${c.type}',this.checked)">
+      </td>
+      <td data-label="Last Filed">${c['Last Filed On'] || ''}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -186,21 +171,62 @@ function filterClients(){
   else renderTable(allClients.filter(c => c.type.toLowerCase() === type.toLowerCase()));
 }
 
-// 🗓️ Reminders logic
+// Mark as Filed
+async function markFiled(name, type, checked){
+  const filedStatus = checked ? "Yes" : "No";
+  const today = new Date();
+  const lastFiledOn = today.toDateString();
+  await fetch(sheetURL, {
+    method: 'POST',
+    body: JSON.stringify({
+      action: "update",
+      name,
+      filedStatus,
+      lastFiledOn
+    }),
+    headers: { 'Content-Type': 'application/json' }
+  });
+  alert(`${name}'s ${type} marked as filed ✅`);
+  fetchData();
+}
+
+// Add new client
+async function addClient(){
+  const form = document.getElementById("clientForm");
+  const client = {
+    name: form.name.value,
+    type: form.type.value,
+    mobile: form.mobile.value,
+    email: form.email.value,
+    aadhar: form.aadhar.value,
+    pan: form.pan.value,
+    gst: form.gst.value,
+    portalId: form.portalId.value,
+    portalPass: form.portalPass.value,
+    dob: form.dob.value
+  };
+  await fetch(sheetURL, {
+    method: 'POST',
+    body: JSON.stringify(client),
+    headers: { 'Content-Type': 'application/json' }
+  });
+  alert("✅ Client added successfully!");
+  form.reset();
+  fetchData();
+  return false;
+}
+
+// Reminders (unchanged)
 function renderReminders(rem){
   const rdiv = document.getElementById('reminderList');
   rdiv.innerHTML = '';
-
   const today = new Date();
   const weekStart = new Date(today);
   weekStart.setDate(today.getDate() - 3);
   const weekEnd = new Date(today);
   weekEnd.setDate(today.getDate() + 7);
-
   const reminders = [];
-
   rem.forEach(c => {
-    // GST reminder every 11th and 20th
     if(c.type === "GST"){
       const d11 = new Date(today.getFullYear(), today.getMonth(), 11);
       const d20 = new Date(today.getFullYear(), today.getMonth(), 20);
@@ -210,16 +236,12 @@ function renderReminders(rem){
         }
       });
     }
-
-    // ITR reminder on 30th August
     if(c.type === "ITR"){
       const d30 = new Date(today.getFullYear(), 7, 30);
       if(d30 >= weekStart && d30 <= weekEnd){
         reminders.push({name:c.name, date:d30.toDateString(), type:"ITR Filing Due"});
       }
     }
-
-    // Birthday reminder (based on DOB)
     if(c.dob){
       const dob = new Date(c.dob);
       const bd = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
@@ -228,12 +250,10 @@ function renderReminders(rem){
       }
     }
   });
-
   if(reminders.length === 0){
     rdiv.innerHTML = '<p>No reminders this week 🎉</p>';
     return;
   }
-
   reminders.forEach(r => {
     const div = document.createElement('div');
     div.innerHTML = `<b>${r.name}</b> — ${r.type} (${r.date})<hr>`;
@@ -243,6 +263,5 @@ function renderReminders(rem){
 
 fetchData();
 </script>
-
 </body>
 </html>
